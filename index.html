@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>J-Phish | Cyber Security</title>
+
+<style>
+
+/* ---------- COLOURS ---------- */
+
+:root {
+    --bg: #030806;
+    --card: rgba(8, 20, 13, 0.94);
+    --text: #d8ffe3;
+    --muted: #83a991;
+    --border: #174d2b;
+    --accent: #00ff66;
+
+    --ok: #00ff66;
+    --okbg: #092b18;
+
+    --warn: #ffd166;
+    --warnbg: #30250a;
+
+    --bad: #ff4545;
+    --badbg: #350d0d;
+}
+
+/* ---------- GENERAL ---------- */
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 16px/1.6 "Consolas", "Courier New", monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+/* ---------- BACKGROUND EFFECT ---------- */
+
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background:
+        linear-gradient(rgba(0,255,100,0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,255,100,0.035) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: -1;
+}
+
+/* ---------- DRAGON BACKGROUND ---------- */
+
+.dragon {
+    position: fixed;
+    width: 750px;
+    height: 750px;
+    right: -140px;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0.13;
+    pointer-events: none;
+    z-index: -1;
+    filter: drop-shadow(0 0 25px #00ff66);
+}
+
+.dragon svg {
+    width: 100%;
+    height: 100%;
+}
+
+/* ---------- PAGE LAYOUT ---------- */
+
+main {
+    max-width: 850px;
+    margin: 0 auto;
+    padding: 65px 20px 50px;
+    position: relative;
+}
+
+h1 {
+    margin: 0;
+    font-size: 3rem;
+    letter-spacing: 5px;
+    color: var(--accent);
+    text-shadow: 0 0 10px #00ff66,
+                 0 0 25px rgba(0,255,100,0.5);
+}
+
+.sub {
+    color: var(--muted);
+    margin: 8px 0 35px;
+    font-size: 0.95rem;
+}
+
+.card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 25px;
+    margin-bottom: 20px;
+    box-shadow: 0 0 20px rgba(0,255,100,0.06);
+    backdrop-filter: blur(8px);
+}
+
+.foot {
+    font-size: 0.8rem;
+    color: var(--muted);
+}
+
+/* ---------- INPUT FORM ---------- */
+
+.row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+input {
+    flex: 1 1 260px;
+    min-width: 0;
+    padding: 15px;
+    border: 1px solid #176b36;
+    border-radius: 8px;
+    background: #020704;
+    color: var(--accent);
+    font-size: 1rem;
+    outline: none;
+    font-family: inherit;
+}
+
+input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 12px rgba(0,255,100,0.3);
+}
+
+input::placeholder {
+    color: #52745d;
+}
+
+button {
+    padding: 14px 28px;
+    border: 1px solid var(--accent);
+    border-radius: 8px;
+    background: var(--accent);
+    color: #001b09;
+    font-size: 1rem;
+    font-weight: bold;
+    font-family: inherit;
+    cursor: pointer;
+    transition: 0.25s;
+}
+
+button:hover {
+    background: transparent;
+    color: var(--accent);
+    box-shadow: 0 0 18px rgba(0,255,100,0.5);
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ---------- ERROR ---------- */
+
+#error {
+    display: none;
+    color: var(--bad);
+    margin: 12px 0 0;
+}
+
+/* ---------- RESULTS ---------- */
+
+#result {
+    display: none;
+    animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.badge {
+    display: inline-block;
+    font-weight: bold;
+    padding: 7px 18px;
+    border-radius: 30px;
+    margin-bottom: 12px;
+}
+
+.ok {
+    background: var(--okbg);
+    color: var(--ok);
+    border: 1px solid var(--ok);
+}
+
+.warn {
+    background: var(--warnbg);
+    color: var(--warn);
+    border: 1px solid var(--warn);
+}
+
+.bad {
+    background: var(--badbg);
+    color: var(--bad);
+    border: 1px solid var(--bad);
+}
+
+.url {
+    word-break: break-all;
+    font-family: monospace;
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin-top: 10px;
+}
+
+/* ---------- RESULT GRID ---------- */
+
+.grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-top: 22px;
+}
+
+@media (max-width:520px) {
+    .grid {
+        grid-template-columns: 1fr;
+    }
+
+    h1 {
+        font-size: 2.2rem;
+    }
+
+    .dragon {
+        width: 500px;
+        height: 500px;
+        right: -250px;
+    }
+}
+
+.box {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px;
+    background: rgba(0,20,8,0.7);
+}
+
+.box h3 {
+    margin: 0 0 8px;
+    font-size: 0.9rem;
+    color: var(--muted);
+    font-weight: 600;
+}
+
+.big {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: var(--accent);
+    text-shadow: 0 0 10px rgba(0,255,100,0.4);
+}
+
+.reasons-title {
+    margin: 25px 0 0;
+    font-weight: bold;
+    color: var(--accent);
+}
+
+ul {
+    margin: 10px 0 0;
+    padding-left: 22px;
+}
+
+li {
+    margin: 7px 0;
+    color: var(--muted);
+}
+
+/* ---------- FOOTER ---------- */
+
+footer {
+    text-align: center;
+    margin-top: 35px;
+    color: var(--muted);
+    font-size: 0.8rem;
+    border-top: 1px solid var(--border);
+    padding-top: 18px;
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- DRAGON BACKGROUND -->
+
+<div class="dragon">
+<svg viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg">
+
+    <path
+    d="M300 55
+    C250 75 220 110 235 155
+    L170 110
+    L195 190
+    L95 145
+    L155 245
+    L60 235
+    L165 310
+    C130 365 150 435 215 465
+    L190 535
+    L270 490
+    L300 555
+    L330 490
+    L410 535
+    L385 465
+    C450 435 470 365 435 310
+    L540 235
+    L445 245
+    L505 145
+    L405 190
+    L430 110
+    L365 155
+    C380 110 350 75 300 55Z"
+    fill="#00ff66"/>
+
+    <path
+    d="M245 200
+    Q300 165 355 200
+    L330 275
+    Q300 300 270 275Z"
+    fill="#020806"/>
+
+    <path
+    d="M255 225 L285 235
+    M315 235 L345 225"
+    stroke="#00ff66"
+    stroke-width="8"
+    stroke-linecap="round"/>
+
+    <path
+    d="M270 300 Q300 340 330 300"
+    fill="none"
+    stroke="#00ff66"
+    stroke-width="8"/>
+
+    <path
+    d="M230 360 Q300 420 370 360"
+    fill="none"
+    stroke="#020806"
+    stroke-width="12"/>
+
+</svg>
+</div>
+
+<main>
+
+    <!-- HEADER -->
+
+    <h1>J-PHISH</h1>
+
+    <p class="sub">
+        //  PHISHING URL DETECTION SYSTEM
+        <br>
+        Analyse suspicious links using Machine Learning.
+    </p>
+
+    <!-- INPUT -->
+
+    <div class="card">
+
+        <div class="row">
+
+            <input
+                id="url"
+                type="text"
+                placeholder="Enter suspicious URL..."
+                autocomplete="off"
+            >
+
+            <button id="go">SCAN URL</button>
+
+        </div>
+
+        <p id="error"></p>
+
+    </div>
+
+    <!-- RESULTS -->
+
+    <div id="result" class="card">
+
+        <span id="verdict" class="badge"></span>
+
+        <div id="note"></div>
+
+        <div id="shown" class="url"></div>
+
+        <div class="grid">
+
+            <div class="box">
+
+                <h3>Machine Learning Model</h3>
+
+                <div class="big" id="ml"></div>
+
+                <div class="foot">
+                    Chance the website is phishing
+                </div>
+
+            </div>
+
+            <div class="box">
+
+                <h3>Rule-Based Detection</h3>
+
+                <div class="big" id="score"></div>
+
+                <div class="foot">
+                    Warning points detected in URL
+                </div>
+
+            </div>
+
+        </div>
+
+        <p class="reasons-title">
+            // WARNING SIGNS DETECTED
+        </p>
+
+        <ul id="reasons"></ul>
+
+    </div>
+
+    <footer>
+        J-PHISH // CYBERSECURITY PROJECT
+        <br>
+        A safe-looking result does not guarantee that a website is safe.
+    </footer>
+
+</main>
+
+
+<script>
+
+const $ = id => document.getElementById(id);
+
+
+// Show error message
+
+function showError(message) {
+
+    $("result").style.display = "none";
+
+    $("error").textContent = message;
+
+    $("error").style.display = "block";
+
+}
+
+
+// Display results
+
+function showResult(d) {
+
+    $("error").style.display = "none";
+
+    $("verdict").textContent = d.verdict;
+
+    $("verdict").className = "badge " + d.level;
+
+    $("note").textContent = d.note;
+
+    $("shown").textContent = d.url;
+
+    $("ml").textContent = d.ml_percent + "%";
+
+    $("score").textContent = d.score + " points";
+
+
+    const list = $("reasons");
+
+    list.innerHTML = "";
+
+
+    if (d.reasons.length === 0) {
+
+        const li = document.createElement("li");
+
+        li.textContent =
+            "No warning signs found in the link itself.";
+
+        list.appendChild(li);
+
+    }
+
+
+    d.reasons.forEach(r => {
+
+        const li = document.createElement("li");
+
+        li.textContent = "+" + r.points + "  " + r.text;
+
+        list.appendChild(li);
+
+    });
+
+
+    $("result").style.display = "block";
+
+}
+
+
+// Check URL using API
+
+async function check() {
+
+    const url = $("url").value.trim();
+
+    if (!url) {
+
+        showError("Please enter a URL.");
+
+        return;
+
+    }
+
+
+    $("go").disabled = true;
+
+    $("go").textContent = "SCANNING...";
+
+
+    try {
+
+        const response = await fetch("/api/check", {
+
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({ url: url })
+
+        });
+
+
+        const data = await response.json();
+
+
+        if (!response.ok) {
+
+            showError(data.error || "Something went wrong.");
+
+            return;
+
+        }
+
+
+        showResult(data);
+
+
+    } catch (e) {
+
+        showError(
+            "Cannot reach server. Is app.py running?"
+        );
+
+    } finally {
+
+        $("go").disabled = false;
+
+        $("go").textContent = "SCAN URL";
+
+    }
+
+}
+
+
+// Button click
+
+$("go").onclick = check;
+
+
+// Enter key
+
+$("url").addEventListener("keydown", e => {
+
+    if (e.key === "Enter") {
+
+        check();
+
+    }
+
+});
+
+</script>
+
+</body>
+</html>
